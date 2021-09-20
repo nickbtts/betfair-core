@@ -10,3 +10,9 @@ Sentry.init({
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
 })
+
+/**
+ * Export sentry settings as global context
+ * for better access to processes and procedures
+ */
+export { Sentry, Tracing }
