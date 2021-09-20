@@ -1,0 +1,9 @@
+{
+  "name": "betfair-core",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:dinteca/betfair-core.git",
+  "author": "Junior Botelho [DO] <debotelho@yahoo.com>",
+  "license": "MIT",
+  "private": false
+}
