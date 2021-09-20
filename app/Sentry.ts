@@ -15,4 +15,4 @@ Sentry.init({
  * Export sentry settings as global context
  * for better access to processes and procedures
  */
-export { Sentry, Tracing }
+export { Sentry as Context, Tracing }
