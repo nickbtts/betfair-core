@@ -7,7 +7,11 @@ import * as Environment from '@App/Environment'
 import * as Sentry from '@App/Sentry'
 import * as Logger from '@App/Logger'
 import { BetfairErrors } from '@Service/Betfair.Errors'
-import { AxiosLoginStatus, CreateDeveloperAppKeys } from '@Type/Service'
+import {
+  AxiosLoginStatus as LoginStatus,
+  BetfairLoginConfig,
+  CreateDeveloperAppKeys,
+} from '@Type/Service'
 
 const logger = Logger.Logging({})
 
@@ -54,7 +58,21 @@ const betfairLoginConfig: AxiosRequestConfig = {
   httpsAgent: nodeHttpsAgent,
 }
 
-const betfair = Axios.create(betfairLoginConfig)
+const betfairLoginApi: AxiosRequestConfig = {
+  headers: {
+    Accept: 'application/json',
+    'X-Application': 'SomeKey',
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  params: {
+    username: Environment.ENVBetfair().username,
+    password: Environment.ENVBetfair().password,
+  },
+  baseURL: 'https://identitysso.betfair.com/',
+}
+
+const betapi = Axios.create(betfairLoginApi)
+const betssl = Axios.create(betfairLoginConfig)
 const account = Axios.create()
 
 /**
@@ -64,21 +82,48 @@ const account = Axios.create()
  * the login mode, The parameter is a goal and 'interactive'
  * configuration is a toggler to select the login mode.
  */
-export const BetfairLogin = async () => {
-  try {
-    const login = await betfair.post<any, AxiosLoginStatus>('api/certlogin')
-    const type = login.data['loginStatus']
-    const message = BetfairErrors().getContext[type]
+export const BetfairLogin = async ({
+  interactive = false,
+  virtualNetwork,
+}: BetfairLoginConfig) => {
+  /**
+   * Change whether betfair will login via interactive mode or not
+   * check if the connection will be made via vpn or not
+   */
+  if (interactive) {
+    try {
+      const loginWithApi = await betapi.post<any, LoginStatus>('api/login')
+      const dataContext = loginWithApi.data['error']
+      const message = BetfairErrors().getContext[dataContext]
 
-    if (BetfairErrors().toArray().includes(type)) {
-      logger.error(login.data['loginStatus'])
-      throw new Error(message)
+      if (BetfairErrors().toArray().includes(dataContext)) {
+        logger.error(loginWithApi.data['error'])
+        throw new Error(message)
+      }
+    } catch (error) {
+      logger.error(error)
+      Sentry.Context.captureException(error)
+    } finally {
+      transaction.finish()
     }
-  } catch (error) {
-    logger.error(error)
-    Sentry.Context.captureException(error)
-  } finally {
-    transaction.finish()
+  }
+
+  if (!interactive) {
+    try {
+      const loginWithSsl = await betssl.post<any, LoginStatus>('api/certlogin')
+      const dataContext = loginWithSsl.data['loginStatus']
+      const message = BetfairErrors().getContext[dataContext]
+
+      if (BetfairErrors().toArray().includes(dataContext)) {
+        logger.error(loginWithSsl.data['loginStatus'])
+        throw new Error(message)
+      }
+    } catch (error) {
+      logger.error(error)
+      Sentry.Context.captureException(error)
+    } finally {
+      transaction.finish()
+    }
   }
 }
 
