@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es6"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "build",
+    "declaration": true,
+    "declarationDir": "build/types",
+    "baseUrl": ".",
+    "paths": {
+      "@Type/*": ["src/types/*"],
+      "@App/*": ["app/*"],
+      "@Config/*": ["config/*"],
+      "@Service/*": ["service/*"],
+      "@Temp/*": ["temp/*"],
+      "@Source/*": ["src/*"],
+      "@Utilities/*": ["utilities/*"]
+    },
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist"
+  ],
+  "include": [
+    "**/*.ts",
+    "**/*.spec.ts"
+  ]
+}
